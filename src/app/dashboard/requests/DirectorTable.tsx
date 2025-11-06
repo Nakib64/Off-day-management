@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import RejectModal from "./RejectModal";
 import Loading from "@/components/Loading";
 import Pagination from "@/components/Pagination";
-import { Search } from "lucide-react";
+import { CheckCircle, Search, XCircle } from "lucide-react";
 
 async function fetchDirectorRequests({ page, limit, status, search }: any) {
   const params = new URLSearchParams();
@@ -64,7 +64,7 @@ export default function DirectorRequests() {
         status: statusFilter,
         search: searchQuery,
       }),
-    
+
   });
 
   const mutation = useMutation({
@@ -151,80 +151,83 @@ export default function DirectorRequests() {
             </div>
           </div>
         </div>
-         {isLoading ?  <Loading text="Loading requests..." />:
+        {isLoading ? <Loading text="Loading requests..." /> :
 
 
-        <div className="rounded-lg border bg-white shadow-sm overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-center">Subject</TableHead>
-                <TableHead className="text-center hidden md:table-cell">Teacher Name</TableHead>
-                <TableHead className="text-center hidden lg:table-cell">Email</TableHead>
-                <TableHead className="text-center">Days</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.length === 0 ? (
+          <div className="rounded-lg border bg-white shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    No requests found.
-                  </TableCell>
+                  <TableHead className="text-center">Subject</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">Teacher Name</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">Email</TableHead>
+                  <TableHead className="text-center">Days</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              ) : (
-                requests.map((req: any) => (
-                  <TableRow key={req._id}>
-                    <TableCell className="text-center">{req.subject || "N/A"}</TableCell>
-                    <TableCell className="text-center hidden md:table-cell">
-                      {req.teacherName || req.teacherEmail || "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center hidden lg:table-cell">
-                      {req.teacherEmail || "N/A"}
-                    </TableCell>
-                    <TableCell className="text-center">{req.days}</TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          req.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : req.status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : req.status === "in_progress"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {req.status?.replace("_", " ").toUpperCase() || "PENDING"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 justify-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePass(req._id)}
-                          disabled={mutation.isPending || req.status !== "pending"}
-                        >
-                          Pass
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => onRejectClick(req._id)}
-                          disabled={mutation.isPending || req.status !== "pending"}
-                        >
-                          Reject
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {requests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      No requests found.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>}
+                ) : (
+                  requests.map((req: any) => (
+                    <TableRow key={req._id}>
+                      <TableCell className="text-center">{req.subject || "N/A"}</TableCell>
+                      <TableCell className="text-center hidden md:table-cell">
+                        {req.teacherName || req.teacherEmail || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-center hidden lg:table-cell">
+                        {req.teacherEmail || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-center">{req.days}</TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${req.status === "accepted"
+                              ? "bg-green-100 text-green-800"
+                              : req.status === "rejected"
+                                ? "bg-red-100 text-red-800"
+                                : req.status === "in_progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                            }`}
+                        >
+                          {req.status?.replace("_", " ").toUpperCase() || "PENDING"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePass(req._id)}
+                            disabled={mutation.isPending || req.status !== "pending"}
+                            title="Pass"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Pass
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => onRejectClick(req._id)}
+                            disabled={mutation.isPending || req.status !== "pending"}
+                            title="Reject"
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>}
 
         {totalPages > 1 && (
           <Pagination

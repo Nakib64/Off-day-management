@@ -18,6 +18,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Loading from "@/components/Loading";
 import Pagination from "@/components/Pagination";
+import { Edit2, Trash2 } from "lucide-react";
 
 const EditSchema = z.object({
   subject: z.string().min(1),
@@ -79,7 +80,7 @@ export default function TeacherRequests() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["requests", { status: statusFilter, page: currentPage, limit: itemsPerPage }],
     queryFn: fetchTeacherRequests,
-    
+
   });
 
   const form = useForm<z.infer<typeof EditSchema>>({
@@ -203,77 +204,79 @@ export default function TeacherRequests() {
             Showing {paginatedData.length} of {totalItems} requests
           </div>
         </div>
-        {isLoading ?  <Loading text="Loading requests..." />:
-        <div className="rounded-lg border bg-white shadow-sm overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-center">Subject</TableHead>
-                <TableHead className="text-center">Start Date</TableHead>
-                <TableHead className="text-center">End Date</TableHead>
-                <TableHead className="text-center">Description</TableHead>
-                <TableHead className="text-center">Days</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedData.length === 0 ? (
+        {isLoading ? <Loading text="Loading requests..." /> :
+          <div className="rounded-lg border bg-white shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    {statusFilter === "all"
-                      ? "No requests found. Create your first request!"
-                      : `No ${statusFilter.replace("_", " ")} requests found.`}
-                  </TableCell>
+                  <TableHead className="text-center">Subject</TableHead>
+                  <TableHead className="text-center">Start Date</TableHead>
+                  <TableHead className="text-center">End Date</TableHead>
+                  <TableHead className="text-center">Description</TableHead>
+                  <TableHead className="text-center">Days</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              ) : (
-                paginatedData.map((req: any) => (
-                  <TableRow key={req._id}>
-                    <TableCell className="text-center">{req.subject}</TableCell>
-                    <TableCell className="text-center">{formatDate(req.startDate)}</TableCell>
-                    <TableCell className="text-center">{formatDate(req.endDate)}</TableCell>
-                    <TableCell className="text-center">{req.description}</TableCell>
-                    <TableCell className="text-center">{req.days}</TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          req.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : req.status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : req.status === "in_progress"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {req.status.replace("_", " ").toUpperCase()}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 justify-center">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEdit(req)}
-                          disabled={req.status !== "pending" || updateMutation.isPending}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(req)}
-                          disabled={req.status !== "pending" || deleteMutation.isPending}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      {statusFilter === "all"
+                        ? "No requests found. Create your first request!"
+                        : `No ${statusFilter.replace("_", " ")} requests found.`}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>}
+                ) : (
+                  paginatedData.map((req: any) => (
+                    <TableRow key={req._id}>
+                      <TableCell className="text-center">{req.subject}</TableCell>
+                      <TableCell className="text-center">{formatDate(req.startDate)}</TableCell>
+                      <TableCell className="text-center">{formatDate(req.endDate)}</TableCell>
+                      <TableCell className="text-center">{req.description}</TableCell>
+                      <TableCell className="text-center">{req.days}</TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${req.status === "accepted"
+                              ? "bg-green-100 text-green-800"
+                              : req.status === "rejected"
+                                ? "bg-red-100 text-red-800"
+                                : req.status === "in_progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                            }`}
+                        >
+                          {req.status.replace("_", " ").toUpperCase()}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(req)}
+                            disabled={req.status !== "pending" || updateMutation.isPending}
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(req)}
+                            disabled={req.status !== "pending" || deleteMutation.isPending}
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>}
 
         {/* Pagination */}
         {totalPages > 1 && (
