@@ -98,12 +98,7 @@ export default function ChairmanRequests() {
     );
   }
 
-  if (isLoading)
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loading text="Loading requests..." />
-      </div>
-    );
+
 
   if (error)
     return (
@@ -158,7 +153,7 @@ export default function ChairmanRequests() {
             Showing {paginatedData.length} of {totalItems} requests
           </div>
         </div>
-
+{isLoading ? <Loading text="Loading requests..." /> :
         <RequestsTable
           requests={paginatedData}
           loadingButton={loadingButton}
@@ -166,7 +161,7 @@ export default function ChairmanRequests() {
           onApprove={handleApprove}
           onRejectClick={onRejectClick}
           onViewDetails={setViewingRequest}
-        />
+        />}
 
         {totalPages > 1 && (
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
