@@ -53,21 +53,33 @@ export async function GET(request: Request) {
     ];
   }
 
+  // Define status priority field dynamically based on role:
+  // For chairman: priority 0 if status === "in_progress", else 1
+  // For others: priority 0 if status === "pending", else 1
+
+  const statusPriorityCondition =
+    role === "chairman"
+      ? { $cond: [{ $eq: ["$status", "in_progress"] }, 0, 1] }
+      : { $cond: [{ $eq: ["$status", "pending"] }, 0, 1] };
+
   // Fetch filtered and paginated data
   const [totalItems, items] = await Promise.all([
     collection.countDocuments(query),
-    collection.aggregate([
-      { $match: query },
-      {
-        $addFields: {
-          statusPriority: { $cond: [{ $eq: ["$status", "in_progress"] }, 0, 1] }
-        }
-      },
-      { $sort: { statusPriority: 1, createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ]).toArray() ])
-    
+    collection
+      .aggregate([
+        { $match: query },
+        {
+          $addFields: {
+            statusPriority: statusPriorityCondition,
+          },
+        },
+        // Sort by dynamic status priority ascending, then by creation date descending
+        { $sort: { statusPriority: 1, createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+      ])
+      .toArray(),
+  ]);
 
   const totalPages = Math.ceil(totalItems / limit);
 
@@ -81,6 +93,7 @@ export async function GET(request: Request) {
     { status: 200 }
   );
 }
+
 
 
 export async function POST(request: Request) {

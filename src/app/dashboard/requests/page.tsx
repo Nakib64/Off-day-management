@@ -1,9 +1,9 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import TeacherTable from "./TeacherTable"; 
+import TeacherTable from "./teacher/TeacherTable"; 
 import DirectorTable from "./DirectorTable";
-import ChairmanTable from "./ChairmanTable";
+import ChairmanTable from "./chairman/ChairmanTable";
 import Loading from "@/components/Loading";
 
 export default function RequestsPage() {
