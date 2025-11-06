@@ -56,13 +56,18 @@ export async function GET(request: Request) {
   // Fetch filtered and paginated data
   const [totalItems, items] = await Promise.all([
     collection.countDocuments(query),
-    collection
-      .find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray(),
-  ]);
+    collection.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          statusPriority: { $cond: [{ $eq: ["$status", "in_progress"] }, 0, 1] }
+        }
+      },
+      { $sort: { statusPriority: 1, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]).toArray() ])
+    
 
   const totalPages = Math.ceil(totalItems / limit);
 

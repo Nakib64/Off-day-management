@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import RejectModal from "./RejectModal";
 import Loading from "@/components/Loading";
 import Pagination from "@/components/Pagination";
-import { Search, Eye, Check, X } from "lucide-react";
+import { Search, Eye, Check, X, Loader2 } from "lucide-react";
 
 // Helper outside components to avoid duplication error
 function formatDate(dateStr: string) {
@@ -69,6 +69,9 @@ export default function ChairmanRequests() {
   // State for viewing modal
   const [viewingRequest, setViewingRequest] = useState<any | null>(null);
 
+  // State to track which button is loading and for which action
+  const [loadingButton, setLoadingButton] = useState<{ id: string; action: "approve" | "reject" | null } | null>(null);
+
   const { data, isLoading, error } = useQuery({
     queryKey: [
       "requests",
@@ -91,14 +94,22 @@ export default function ChairmanRequests() {
       setRejectOpen(false);
       setRejectingId(null);
       setViewingRequest(null);
+      setLoadingButton(null);
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update status");
+      setLoadingButton(null);
     },
   });
 
   function handleApprove(id: string) {
-    mutation.mutate({ id, action: "accept" });
+    setLoadingButton({ id, action: "approve" });
+    mutation.mutate(
+      { id, action: "accept" },
+      {
+        onSettled: () => setLoadingButton(null),
+      }
+    );
   }
 
   function onRejectClick(id: string) {
@@ -108,7 +119,13 @@ export default function ChairmanRequests() {
 
   function onRejectConfirm(reason: string) {
     if (!rejectingId) return;
-    mutation.mutate({ id: rejectingId, action: "reject", message: reason });
+    setLoadingButton({ id: rejectingId, action: "reject" });
+    mutation.mutate(
+      { id: rejectingId, action: "reject", message: reason },
+      {
+        onSettled: () => setLoadingButton(null),
+      }
+    );
   }
 
   if (isLoading) return <Loading text="Loading requests..." />;
@@ -198,15 +215,14 @@ export default function ChairmanRequests() {
                     <TableCell className="text-center">{req.days}</TableCell>
                     <TableCell className="text-center">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          req.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : req.status === "rejected"
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${req.status === "accepted"
+                          ? "bg-green-100 text-green-800"
+                          : req.status === "rejected"
                             ? "bg-red-100 text-red-800"
                             : req.status === "in_progress"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
                       >
                         {req.status?.replace("_", " ").toUpperCase() || "PENDING"}
                       </span>
@@ -218,8 +234,13 @@ export default function ChairmanRequests() {
                           variant="ghost"
                           onClick={() => setViewingRequest(req)}
                           title="View Details"
+                          disabled={loadingButton?.id === req._id}
                         >
-                          <Eye className="w-4 h-4" />
+                          {loadingButton && loadingButton.id === req._id && loadingButton.action === null ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                         </Button>
                         <Button
                           size="sm"
@@ -228,7 +249,11 @@ export default function ChairmanRequests() {
                           disabled={mutation.isPending || req.status !== "in_progress"}
                           title="Approve"
                         >
-                          <Check className="w-4 h-4 text-green-600" />
+                          {loadingButton && loadingButton.id === req._id && loadingButton.action === "approve" ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+                          ) : (
+                            <Check className="w-4 h-4 text-green-600" />
+                          )}
                         </Button>
                         <Button
                           size="sm"
@@ -237,7 +262,11 @@ export default function ChairmanRequests() {
                           disabled={mutation.isPending || req.status !== "in_progress"}
                           title="Reject"
                         >
-                          <X className="w-4 h-4 text-red-600" />
+                          {loadingButton && loadingButton.id === req._id && loadingButton.action === "reject" ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                          ) : (
+                            <X className="w-4 h-4 text-red-600" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
@@ -296,11 +325,11 @@ function ViewRequestModal({
 }) {
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-20 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg max-w-lg w-full p-6 relative"
+        className="bg-white rounded-lg max-w-lg w-full p-6 relative shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-semibold mb-4">Request Details</h2>
@@ -326,15 +355,14 @@ function ViewRequestModal({
           <div>
             <strong>Status:</strong>{" "}
             <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                request.status === "accepted"
-                  ? "bg-green-100 text-green-800"
-                  : request.status === "rejected"
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${request.status === "accepted"
+                ? "bg-green-100 text-green-800"
+                : request.status === "rejected"
                   ? "bg-red-100 text-red-800"
                   : request.status === "in_progress"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-yellow-100 text-yellow-800"
-              }`}
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
             >
               {request.status?.replace("_", " ").toUpperCase() || "PENDING"}
             </span>
@@ -355,7 +383,7 @@ function ViewRequestModal({
             disabled={loading || request.status !== "in_progress"}
             title="Approve"
           >
-            <Check className="w-5 h-5 text-green-600" />
+            {loading ? <Loader2 className="w-5 h-5 animate-spin text-green-600" /> : <Check className="w-5 h-5 text-green-600" />}
           </Button>
           <Button
             size="sm"
@@ -364,7 +392,7 @@ function ViewRequestModal({
             disabled={loading || request.status !== "in_progress"}
             title="Reject"
           >
-            <X className="w-5 h-5 text-red-600" />
+            {loading ? <Loader2 className="w-5 h-5 animate-spin text-red-600" /> : <X className="w-5 h-5 text-red-600" />}
           </Button>
         </div>
       </div>
