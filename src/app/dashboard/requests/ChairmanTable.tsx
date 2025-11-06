@@ -16,13 +16,19 @@ import RejectModal from "./RejectModal";
 import Loading from "@/components/Loading";
 import Pagination from "@/components/Pagination";
 import { Search, Eye, Check, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+
+// Helper outside components to avoid duplication error
+function formatDate(dateStr: string) {
+  try {
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "N/A";
+  }
+}
 
 async function fetchChairmanRequests({ queryKey }: any) {
   const [_key, { status, search, page, limit }] = queryKey;
@@ -121,19 +127,6 @@ export default function ChairmanRequests() {
   const totalItems = data?.totalItems || 0;
   const totalPages = data?.totalPages;
   const paginatedData = data?.requests || [];
-
-  // Format date helper
-  function formatDate(dateStr: string) {
-    try {
-      return new Date(dateStr).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "N/A";
-    }
-  }
 
   return (
     <>
@@ -269,112 +262,112 @@ export default function ChairmanRequests() {
         loading={mutation.isPending}
       />
 
-      {/* View Request Modal */}
-      <Dialog open={!!viewingRequest} onOpenChange={() => setViewingRequest(null)}>
-        <DialogContent className="sm:max-w-xl w-full max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Request Details</DialogTitle>
-            <button
-              onClick={() => setViewingRequest(null)}
-              aria-label="Close"
-              className="absolute right-4 top-4 rounded-md p-1 hover:bg-gray-200 transition"
-              type="button"
-            >
-            </button>
-          </DialogHeader>
-
-          {viewingRequest && (
-            <div className="space-y-2 text-sm text-gray-800 mt-2">
-              <div>
-                <strong>Teacher Email:</strong> {viewingRequest.teacherEmail || "N/A"}
-              </div>
-              <div>
-                <strong>Subject:</strong> {viewingRequest.subject || "N/A"}
-              </div>
-              <div>
-                <strong>Start Date:</strong> {formatDate(viewingRequest.startDate)}
-              </div>
-              <div>
-                <strong>End Date:</strong> {formatDate(viewingRequest.endDate)}
-              </div>
-              <div>
-                <strong>Days:</strong> {viewingRequest.days}
-              </div>
-              <div>
-                <strong>Description:</strong> {viewingRequest.description || "N/A"}
-              </div>
-              <div>
-                <strong>Status:</strong>{" "}
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    viewingRequest.status === "accepted"
-                      ? "bg-green-100 text-green-800"
-                      : viewingRequest.status === "rejected"
-                      ? "bg-red-100 text-red-800"
-                      : viewingRequest.status === "in_progress"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {viewingRequest.status?.replace("_", " ").toUpperCase() || "PENDING"}
-                </span>
-              </div>
-              <div>
-                <strong>Created At:</strong> {formatDate(viewingRequest.createdAt)}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex justify-end gap-3 mt-6">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setViewingRequest(null)}
-              disabled={mutation.isPending}
-            >
-              Close
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => viewingRequest && handleApprove(viewingRequest._id)}
-              disabled={mutation.isPending || viewingRequest?.status !== "in_progress"}
-              title="Approve"
-              className="flex items-center"
-            >
-              <Check className="w-5 h-5 text-green-600" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                if (!viewingRequest) return;
-                setRejectingId(viewingRequest._id);
-                setRejectOpen(true);
-                setViewingRequest(null);
-              }}
-              disabled={mutation.isPending || viewingRequest?.status !== "in_progress"}
-              title="Reject"
-              className="flex items-center"
-            >
-              <X className="w-5 h-5 text-red-600" />
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* View modal */}
+      {viewingRequest && (
+        <ViewRequestModal
+          request={viewingRequest}
+          onClose={() => setViewingRequest(null)}
+          onApprove={() => handleApprove(viewingRequest._id)}
+          onReject={() => {
+            setRejectingId(viewingRequest._id);
+            setRejectOpen(true);
+            setViewingRequest(null);
+          }}
+          loading={mutation.isPending}
+        />
+      )}
     </>
   );
+}
 
-  // Format date helper inside component scope
-  function formatDate(dateStr: string) {
-    try {
-      return new Date(dateStr).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "N/A";
-    }
-  }
+// Modal for viewing details and action buttons
+function ViewRequestModal({
+  request,
+  onClose,
+  onApprove,
+  onReject,
+  loading,
+}: {
+  request: any;
+  onClose: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg max-w-lg w-full p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-semibold mb-4">Request Details</h2>
+        <div className="space-y-2 text-sm text-gray-800">
+          <div>
+            <strong>Teacher Email:</strong> {request.teacherEmail || "N/A"}
+          </div>
+          <div>
+            <strong>Subject:</strong> {request.subject || "N/A"}
+          </div>
+          <div>
+            <strong>Start Date:</strong> {formatDate(request.startDate)}
+          </div>
+          <div>
+            <strong>End Date:</strong> {formatDate(request.endDate)}
+          </div>
+          <div>
+            <strong>Days:</strong> {request.days}
+          </div>
+          <div>
+            <strong>Description:</strong> {request.description || "N/A"}
+          </div>
+          <div>
+            <strong>Status:</strong>{" "}
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                request.status === "accepted"
+                  ? "bg-green-100 text-green-800"
+                  : request.status === "rejected"
+                  ? "bg-red-100 text-red-800"
+                  : request.status === "in_progress"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
+            >
+              {request.status?.replace("_", " ").toUpperCase() || "PENDING"}
+            </span>
+          </div>
+          <div>
+            <strong>Created At:</strong> {formatDate(request.createdAt)}
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button size="sm" variant="outline" onClick={onClose} disabled={loading}>
+            Close
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onApprove}
+            disabled={loading || request.status !== "in_progress"}
+            title="Approve"
+          >
+            <Check className="w-5 h-5 text-green-600" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onReject}
+            disabled={loading || request.status !== "in_progress"}
+            title="Reject"
+          >
+            <X className="w-5 h-5 text-red-600" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
