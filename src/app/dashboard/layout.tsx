@@ -19,6 +19,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navLinks = [
     { href: "/dashboard/requests", label: "Requests" },
+    { href: "/dashboard/teachers", label: "Teachers" },
     ...(role === "teacher" ? [{ href: "/dashboard/new-request", label: "New Request" }] : []),
     { href: "/dashboard/settings", label: "Settings" },
   ];

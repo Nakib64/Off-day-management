@@ -9,6 +9,7 @@ import Loading from "@/components/Loading";
 export default function RequestsPage() {
   const { data: session, status } = useSession();
 
+  console.log(session);
   if (status === "loading") return <Loading text="Loading..." fullScreen />;
   if (!session || !(session.user as any)?.role) return <Loading text="Unauthorized" fullScreen />;
 

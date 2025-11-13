@@ -33,6 +33,7 @@ async function updateStatus(id: string, payload: any) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
+    console.log(data);
     throw new Error(data.error || "Failed to update status");
   }
   return res.json();
@@ -56,8 +57,8 @@ export default function ChairmanRequests() {
   });
 
   const mutation = useMutation({
-    mutationFn: (vars: { id: string; action: string; message?: string }) =>
-      updateStatus(vars.id, { action: vars.action, message: vars.message }),
+    mutationFn: (vars: { id: string; action: string; message?: string, email:string , start: string, end:string}) =>
+      updateStatus(vars.id, vars),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
       toast.success("Status updated");
@@ -72,10 +73,10 @@ export default function ChairmanRequests() {
     },
   });
 
-  function handleApprove(id: string) {
+  function handleApprove(id: string, email: string,  startDate:string, endDate: string,) {
     setLoadingButton({ id, action: "approve" });
     mutation.mutate(
-      { id, action: "accept" },
+      { id, action: "accept", email: email , start:startDate, end:endDate},
       {
         onSettled: () => setLoadingButton(null),
       }
@@ -91,7 +92,7 @@ export default function ChairmanRequests() {
     if (!rejectingId) return;
     setLoadingButton({ id: rejectingId, action: "reject" });
     mutation.mutate(
-      { id: rejectingId, action: "reject", message: reason },
+      { id: rejectingId, action: "reject", message: reason , email: '', start:'', end: ''},
       {
         onSettled: () => setLoadingButton(null),
       }
@@ -174,7 +175,7 @@ export default function ChairmanRequests() {
         <ViewRequestModal
           request={viewingRequest}
           onClose={() => setViewingRequest(null)}
-          onApprove={() => handleApprove(viewingRequest._id)}
+          onApprove={() => handleApprove(viewingRequest._id, '', '', '')}
           onReject={() => {
             setRejectingId(viewingRequest._id);
             setRejectOpen(true);

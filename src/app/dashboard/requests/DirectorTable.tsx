@@ -36,6 +36,7 @@ async function updateStatus(id: string, payload: any) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
+    console.log(res);
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || "Failed to update status");
   }

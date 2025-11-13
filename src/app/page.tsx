@@ -52,7 +52,7 @@ export default function Home() {
       toast.success("Welcome back!");
       router.replace("/dashboard/requests");
     } else {
-      toast.error(res?.error || "Invalid credentials");
+      toast.error( "Invalid email or password");
     }
   };
 

@@ -21,7 +21,7 @@ export default function RequestsTable({
   requests: any[];
   loadingButton: { id: string; action: "approve" | "reject" | null } | null;
   mutation: any;
-  onApprove: (id: string) => void;
+  onApprove: (id: string, email: string, startDate:string, endDate: string) => void;
   onRejectClick: (id: string) => void;
   onViewDetails: (req: any) => void;
 }) {
@@ -83,7 +83,7 @@ export default function RequestsTable({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onApprove(req._id)}
+                      onClick={() => onApprove(req._id, req.teacherEmail, req.startDate, req.endDate)}
                       disabled={mutation.isLoading || req.status !== "in_progress"}
                       title="Approve"
                     >
