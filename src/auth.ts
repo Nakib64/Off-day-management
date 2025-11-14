@@ -38,6 +38,7 @@ export const authConfig: NextAuthOptions = {
         } as User & { role: string };
       },
     }),
+    
   ],
   callbacks: {
     async jwt({ token, user }) {

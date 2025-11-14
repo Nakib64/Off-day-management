@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Check, X, Loader2 } from "lucide-react";
+import { Eye } from "lucide-react";
 
 export default function TeachersTable({
   teachers,
